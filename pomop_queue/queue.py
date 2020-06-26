@@ -49,7 +49,7 @@ class Queue:
         for id_, priority, name in self.queue.queue:
             print(f'{id_} | {priority} | {name}')
 
-    def wirte_to_file(self, mode: str, item: Tuple[int, int, str] = ()):
+    def write_to_file(self, mode: str, item: Tuple[int, int, str] = ()):
         line_fmt = '{}, {}, {}\n'
         if mode == 'a':
             if not item:
