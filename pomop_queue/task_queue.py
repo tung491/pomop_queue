@@ -47,10 +47,10 @@ class Queue:
     def print(self) -> None:
         print('ID | Priority | Name')
         print('-' * 30)
-        for id_, priority, name in self.queue.queue:
+        for id_, priority, name in reversed(self.queue.queue):
             print(f'{id_} | {priority} | {name}')
 
-    def write_to_file(self, mode: str, item: Tuple[int, int, str] = ()):
+    def write_to_file(self, mode: str, item: Tuple[int, int, str] = ()) -> None:
         if mode == 'a':
             if not item:
                 raise ValueError('Need pass argument item '
