@@ -10,8 +10,7 @@ def initialize_queue() -> Queue:
             reader = csv.reader(f)
             for row in reader:
                 id_, priority, name = row
-                id_ = int(id_)
-                priority = int(id_)
+                id_, priority = int(id_), int(priority)
                 item = (id_, priority, name)
                 queue.put(item)
     except FileNotFoundError:
@@ -23,13 +22,15 @@ def cli():
     queue = initialize_queue()
 
     parser = argparse.ArgumentParser()
-    subparser = parser.add_subparsers(help='sub-command help')
+    subparser = parser.add_subparsers(help='sub-command help', dest='branchs')
 
     queue_parser = subparser.add_parser('queue', help='queue help')
-    queue_subparse = queue_parser.add_subparsers(help='Queue options help')
+    queue_subparse = queue_parser.add_subparsers(help='Queue options help', dest='queue_cmd')
 
-    list_parser = queue_subparse.add_parser('list', help='List all tasks in queue')
-    size_parser = queue_subparse.add_parser('size', help='Size of the task queue')
+    list_subparse = queue_subparse.add_parser('list', help='List all tasks in queue')
+    list_subparse.set_defaults(func=queue.print)
+    size_subparse = queue_subparse.add_parser('size', help='Size of the task queue')
+    size_subparse.set_defaults(func=queue.print_size)
     rm_parse = queue_subparse.add_parser('rm', help='Remove elememt from task queue')
     rm_parse.add_argument('id', help='The id of element want to remove', type=int)
 
@@ -45,7 +46,15 @@ def cli():
     modify_name_parser.add_argument('id', help='The ID of the task', type=int)
     modify_name_parser.add_argument('name', help='New name of the task', type=str)
 
-    args = parser.parse_args(['queue', 'list'])
+    modify_priority_parser = queue_subparse.add_parser('modify_priority', help='Modify the priority of the task')
+    modify_priority_parser.add_argument('id', help='The ID of the task', type=int)
+    modify_priority_parser.add_argument('priority', help='The new level priority of the task', type=int)
+
+    args = parser.parse_args()
+    if not args.branchs:
+        parser.print_help()
+    elif args.branchs == 'queue' and not args.queue_cmd:
+        queue_parser.print_help()
 
 
 if __name__ == '__main__':
