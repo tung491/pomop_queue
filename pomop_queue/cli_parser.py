@@ -23,7 +23,8 @@ def cli():
 
     parser = argparse.ArgumentParser()
     subparser = parser.add_subparsers(help='sub-command help', dest='branchs')
-
+    
+    # Parser for queue
     queue_parser = subparser.add_parser('queue', help='queue help')
     queue_subparse = queue_parser.add_subparsers(help='Queue options help', dest='queue_cmd')
 
@@ -31,7 +32,7 @@ def cli():
     list_subparse.set_defaults(func=queue.print)
     size_subparse = queue_subparse.add_parser('size', help='Size of the task queue')
     size_subparse.set_defaults(func=queue.print_size)
-    rm_parse = queue_subparse.add_parser('rm', help='Remove elememt from task queue')
+    rm_parse = queue_subparse.add_parser('rm', help='Remove element from task queue')
     rm_parse.add_argument('id', help='The id of element want to remove', type=int)
 
     add_parser = queue_subparse.add_parser('add', help='Add task into ')
@@ -44,17 +45,24 @@ def cli():
 
     modify_name_parser = queue_subparse.add_parser('modify_name', help='Modify the name of task')
     modify_name_parser.add_argument('id', help='The ID of the task', type=int)
-    modify_name_parser.add_argument('name', help='New name of the task', type=str)
+    modify_name_parser.add_argument('name', help='The new name of the task', type=str)
 
     modify_priority_parser = queue_subparse.add_parser('modify_priority', help='Modify the priority of the task')
     modify_priority_parser.add_argument('id', help='The ID of the task', type=int)
     modify_priority_parser.add_argument('priority', help='The new level priority of the task', type=int)
+    
+    # Parser for pomop
+    pomop_parser = subparser.add_parser('pomop', help='pomop help')
+    pomop_parser.add_argument('-l', '--length', help='Length in minutes of this pomodoro')
+    pomop_parser.add_argument('-S', '--nosound', help='Turn off sound notification')
+    pomop_parser.add_argument('-B', '--nobrowser', help='Turn off browser-open notification')
 
     args = parser.parse_args()
     if not args.branchs:
         parser.print_help()
-    elif args.branchs == 'queue' and not args.queue_cmd:
-        queue_parser.print_help()
+    elif args.branchs == 'queue':
+        if not args.queue_cmd:
+            queue_parser.print_help()
 
 
 if __name__ == '__main__':
