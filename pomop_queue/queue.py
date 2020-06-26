@@ -48,3 +48,18 @@ class Queue:
         print('-' * 30)
         for id_, priority, name in self.queue.queue:
             print(f'{id_} | {priority} | {name}')
+
+    def wirte_to_file(self, mode: str, item: Tuple[int, int, str] = ()):
+        line_fmt = '{}, {}, {}\n'
+        if mode == 'a':
+            if not item:
+                raise ValueError('Need pass argument item '
+                                 'into function when mode is append')
+            with open('.tasks.csv', mode) as f:
+                f.write(line_fmt.format(*item))
+        elif mode == 'w':
+            with open('.task.csv', mode) as f:
+                for item in self.queue.queue:
+                    f.write(line_fmt.format(*item))
+        else:
+            raise ValueError('Invaild mode. Just accept "a" and "w" mode')
