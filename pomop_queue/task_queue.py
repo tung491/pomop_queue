@@ -1,6 +1,21 @@
 from queue import PriorityQueue
 import csv
 from typing import Tuple
+import inspect
+from functools import wraps
+import sqlite3
+from pathlib import Path
+
+def hot_reload(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        func(*args, **kwargs)
+        conn = sqlite3.connect(f'{str(Path.home())}/.tasks.db')
+        cursor = conn.cursor()
+        print(func.__dict__)
+    return wrapper
+
+
 
 
 class Queue:
@@ -12,6 +27,10 @@ class Queue:
     def size(self) -> int:
         return self.queue.qsize()
 
+    def print_size(self) -> None:
+        print(self.size)
+
+    @hot_reload
     def put(self, priority: int, name: str) -> int:
         self.queue.put((self.curr_id, priority, name))
         self.curr_id += 1
