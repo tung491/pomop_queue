@@ -1,21 +1,12 @@
 from queue import PriorityQueue
 import csv
 from typing import Tuple
-import inspect
-from functools import wraps
 import sqlite3
+import operator
 from pathlib import Path
 
-def hot_reload(func):
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        func(*args, **kwargs)
-        conn = sqlite3.connect(f'{str(Path.home())}/.tasks.db')
-        cursor = conn.cursor()
-        print(func.__dict__)
-    return wrapper
-
-
+db_path = f'{str(Path.home())}/.tasks.db'
+conn = sqlite3.connect(db_path)
 
 
 class Queue:
@@ -27,17 +18,44 @@ class Queue:
     def size(self) -> int:
         return self.queue.qsize()
 
-    def print_size(self) -> None:
-        print(self.size)
+    @staticmethod
+    def insert_into_db(item):
+        cursor = conn.cursor()
+        cursor.execute("""INSERT INTO tasks (id, name, priority)
+                       VALUES (?, ?, ?)""", item)
+        conn.commit()
 
-    @hot_reload
-    def put(self, priority: int, name: str) -> int:
-        self.queue.put((self.curr_id, priority, name))
+    @staticmethod
+    def remove_from_db(id_):
+        cursor = conn.cursor()
+        cursor.execute("""DELETE FROM tasks
+        WHERE id=:id""", {'id': id_})
+        conn.commit()
+
+    @staticmethod
+    def update_into_db(id_: int, name: str = '', priority: int = 0) -> None:
+        cursor = conn.cursor()
+        sql_query = """UPDATE tasks SET {}=? WHERE ID=?"""
+        if name:
+            field = 'name'
+            field_value = name
+        else:
+            field = 'priority'
+            field_value = priority
+        sql_query = sql_query.format(field)
+        cursor.execute(sql_query, (field_value, id_))
+        conn.commit()
+
+    def put(self, priority: int, name: str, no_insert: bool = False) -> int:
+        item = (self.curr_id, priority, name)
+        self.queue.put(item)
         self.curr_id += 1
-        return self.curr_id - 1
+        if not no_insert:
+            self.insert_into_db(item)
 
     def pop(self) -> str:
-        _, _, name = self.queue.get()
+        id_, name, priority = self.queue.get()
+        self.remove_from_db(id_)
         return name
 
     def pop_item(self, id_: int) -> Tuple[int, int, str]:
@@ -48,25 +66,28 @@ class Queue:
 
         for item in pop_items:
             self.queue.put(item)
+        self.remove_from_db(id_)
         return returned_item
 
     def modify_prority(self, id_: int, new_priority: int) -> None:
         item = self.pop_item(id_)
         item = (item[0], new_priority, item[2])
+        self.update_into_db(id_, priority=new_priority)
         self.queue.put(item)
 
     def modify_name(self, id_: int, new_name: str) -> None:
         item = self.pop_item(id_)
         item = (*item[:2], new_name)
         self.queue.put(item)
+        self.update_into_db(id_, name=new_priority)
 
     def remove(self, id_: int) -> None:
         self.pop_item(id_)
 
     def print(self) -> None:
-        print('ID | Priority | Name')
+        print('ID | Name | Priority')
         print('-' * 30)
-        for id_, priority, name in reversed(self.queue.queue):
+        for id_, priority, name in sorted(self.queue.queue, key=operator.itemgetter(2, 0)):
             print(f'{id_} | {priority} | {name}')
 
     def write_to_file(self, mode: str, item: Tuple[int, int, str] = ()) -> None:
