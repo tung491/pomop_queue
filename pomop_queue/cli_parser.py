@@ -1,9 +1,10 @@
-import shlex
-from subprocess import Popen
 import argparse
-from task_queue import Queue
+import shlex
 import sqlite3
 from pathlib import Path
+from subprocess import Popen
+
+from task_queue import Queue
 
 
 def initialize_queue() -> Queue:
@@ -25,7 +26,7 @@ def initialize_queue() -> Queue:
     return queue
 
 
-def cli():
+def cli() -> None:
     queue = initialize_queue()
 
     parser = argparse.ArgumentParser()

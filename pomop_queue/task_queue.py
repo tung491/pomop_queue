@@ -19,14 +19,14 @@ class Queue:
         return self.queue.qsize()
 
     @staticmethod
-    def insert_into_db(item):
+    def insert_into_db(item) -> None:
         cursor = conn.cursor()
         cursor.execute("""INSERT INTO tasks (id, name, priority)
                        VALUES (?, ?, ?)""", item)
         conn.commit()
 
     @staticmethod
-    def remove_from_db(id_):
+    def remove_from_db(id_) -> None:
         cursor = conn.cursor()
         cursor.execute("""DELETE FROM tasks
         WHERE id=:id""", {'id': id_})
