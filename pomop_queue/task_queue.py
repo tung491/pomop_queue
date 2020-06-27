@@ -46,6 +46,16 @@ class Queue:
         cursor.execute(sql_query, (field_value, id_))
         conn.commit()
 
+    @staticmethod
+    def get_next_popped_item() -> Tuple[int, str, int]:
+        cursor = conn.cursor()
+        sql_query = '''SELECT * FROM tasks 
+        ORDER BY priority asc, id asc 
+        LIMIT 1
+        '''
+        return cursor.execute(sql_query).fetchone()
+
+
     def put(self, priority: int, name: str, no_insert: bool = False) -> int:
         item = (self.curr_id, priority, name)
         self.queue.put(item)

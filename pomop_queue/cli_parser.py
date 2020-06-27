@@ -1,6 +1,7 @@
 import argparse
 import shlex
 import sqlite3
+import sys
 from pathlib import Path
 from subprocess import Popen
 
@@ -70,6 +71,8 @@ def cli() -> None:
 
     # Parser for pomop
     pomop_parser = subparser.add_parser('pomop', help='pomop help')
+    pomop_subparser = pomop_parser.add_subparsers(dest='pomop_cmd')
+    pomop_subparser.add_parser('next-task')
     pomop_parser.add_argument('-l', '--length',
                               help='Length in minutes of this pomodoro',
                               default=25, type=int)
@@ -103,14 +106,20 @@ def cli() -> None:
             queue.put(args.id, args.priority)
     elif args.branchs == 'pomop':
         options = []
-        if args.length:
-            options.append(f'-l {args.length}')
-        if args.nosound:
-            options.append('-S')
-        if args.nobrowser:
-            options.append('-B')
-        if args.target_id < 0 or args.target_id >= queue.curr_id:
-            raise ValueError('Invaild target id')
+        if args.pomop_cmd == 'next-task':
+            item = queue.get_next_popped_item()
+            print('ID | Name | Priority')
+            print('{} | {} | {}'.format(*item))
+            sys.exit()
+        else:
+            if args.length:
+                options.append(f'-l {args.length}')
+            if args.nosound:
+                options.append('-S')
+            if args.nobrowser:
+                options.append('-B')
+            if args.target_id < 0 or args.target_id >= queue.curr_id:
+                raise ValueError('Invaild target id')
         name = queue.pop() if not args.target_id else queue.pop_item(
             args.target_id)
         str_options = ' '.join(options)
