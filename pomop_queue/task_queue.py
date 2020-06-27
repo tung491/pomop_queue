@@ -7,6 +7,7 @@ from pathlib import Path
 
 db_path = f'{str(Path.home())}/.tasks.db'
 conn = sqlite3.connect(db_path)
+cursor = conn.cursor()
 
 
 class Queue:
@@ -20,21 +21,18 @@ class Queue:
 
     @staticmethod
     def insert_into_db(item) -> None:
-        cursor = conn.cursor()
         cursor.execute("""INSERT INTO tasks (id, name, priority)
                        VALUES (?, ?, ?)""", item)
         conn.commit()
 
     @staticmethod
     def remove_from_db(id_) -> None:
-        cursor = conn.cursor()
         cursor.execute("""DELETE FROM tasks
         WHERE id=:id""", {'id': id_})
         conn.commit()
 
     @staticmethod
     def update_into_db(id_: int, name: str = '', priority: int = 0) -> None:
-        cursor = conn.cursor()
         sql_query = """UPDATE tasks SET {}=? WHERE ID=?"""
         if name:
             field = 'name'
@@ -48,13 +46,11 @@ class Queue:
 
     @staticmethod
     def get_next_popped_item() -> Tuple[int, str, int]:
-        cursor = conn.cursor()
         sql_query = '''SELECT * FROM tasks 
         ORDER BY priority asc, id asc 
         LIMIT 1
         '''
         return cursor.execute(sql_query).fetchone()
-
 
     def put(self, priority: int, name: str, no_insert: bool = False) -> int:
         item = (self.curr_id, priority, name)

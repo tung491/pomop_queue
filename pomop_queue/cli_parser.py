@@ -31,7 +31,7 @@ def cli() -> None:
     queue = initialize_queue()
 
     parser = argparse.ArgumentParser()
-    subparser = parser.add_subparsers(help='sub-command help', dest='branchs')
+    subparser = parser.add_subparsers(help='sub-command help', dest='branch')
 
     # Parser for queue
     queue_parser = subparser.add_parser('queue', help='queue help')
@@ -86,10 +86,11 @@ def cli() -> None:
                               help='Target ID of the pomodoro. Default the next '
                                    'popped element in the queue',
                               type=int, default=0)
+
     args = parser.parse_args()
-    if not args.branchs:
+    if not args.branch:
         parser.print_help()
-    elif args.branchs == 'queue':
+    elif args.branch == 'queue':
         if not args.queue_cmd:
             queue_parser.print_help()
         elif args.queue_cmd == 'list':
@@ -104,7 +105,7 @@ def cli() -> None:
             queue.put(args.id, args.name)
         elif args.queue_cmd == 'modify_priority':
             queue.put(args.id, args.priority)
-    elif args.branchs == 'pomop':
+    elif args.branch == 'pomop':
         options = []
         if args.pomop_cmd == 'next-task':
             item = queue.get_next_popped_item()
