@@ -1,5 +1,4 @@
 import argparse
-import shlex
 import sqlite3
 import sys
 from pathlib import Path
@@ -21,9 +20,11 @@ def initialize_queue() -> Queue:
     tasks = cursor.execute('''SELECT * FROM tasks
     ORDER BY priority asc, id asc;
     ''').fetchall()
+
     for task in tasks:
-        queue.put(*task[1:], no_insert=True)
-    queue.curr_id = task[0] + 1
+        name, priority = task[1:]
+        queue.put(name, priority, no_insert=True)
+        queue.curr_id = task[0] + 1
     return queue
 
 
@@ -56,17 +57,21 @@ def cli() -> None:
                             default=3, type=int)
 
     modify_name_parser = queue_subparse.add_parser('modify_name',
-                                                   help='Modify the name of task')
+                                                   help='Modify the name '
+                                                        'of task')
     modify_name_parser.add_argument('id', help='The ID of the task', type=int)
     modify_name_parser.add_argument('name', help='The new name of the task',
                                     type=str)
 
     modify_priority_parser = queue_subparse.add_parser('modify_priority',
-                                                       help='Modify the priority of the task')
+                                                       help='Modify the '
+                                                            'priority of '
+                                                            'the task')
     modify_priority_parser.add_argument('id', help='The ID of the task',
                                         type=int)
     modify_priority_parser.add_argument('priority',
-                                        help='The new level priority of the task',
+                                        help='The new level priority '
+                                             'of the task',
                                         type=int)
 
     # Parser for pomop
@@ -83,7 +88,8 @@ def cli() -> None:
                               help='Turn off browser-open notification',
                               action='store_false')
     pomop_parser.add_argument('--target_id',
-                              help='Target ID of the pomodoro. Default the next '
+                              help='Target ID of the pomodoro. '
+                                   'Default the next '
                                    'popped element in the queue',
                               type=int, default=0)
 
@@ -106,25 +112,26 @@ def cli() -> None:
         elif args.queue_cmd == 'modify_priority':
             queue.put(args.id, args.priority)
     elif args.branch == 'pomop':
-        options = []
+        arguments = ['pomop']
         if args.pomop_cmd == 'next-task':
             item = queue.get_next_popped_item()
             print('ID | Name | Priority')
             print('{} | {} | {}'.format(*item))
             sys.exit()
         if args.length:
-            options.append(f'-l {args.length}')
+            arguments.append(f'-l {args.length}')
         if args.nosound:
-            options.append('-S')
+            arguments.append('-S')
         if args.nobrowser:
-            options.append('-B')
+            arguments.append('-B')
         if args.target_id < 0 or args.target_id >= queue.curr_id:
             raise ValueError('Invaild target id')
-        name = queue.pop() if not args.target_id else queue.pop_item(
-            args.target_id)
-        str_options = ' '.join(options)
-        cmd = f'pomop {str_options} {name}'
-        Popen(shlex.split(cmd))
+        if not args.target_id:
+            _, name, _ = queue.pop()
+        else:
+            _, name, _ = queue.pop_item(args.target_id)
+        arguments.append(name)
+        Popen(arguments)
 
 
 if __name__ == '__main__':
