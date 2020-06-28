@@ -53,6 +53,18 @@ class Queue:
         conn.close()
 
     @staticmethod
+    def get_item(id_: int) -> Item:
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        sql_query = '''SELECT * FROM tasks
+        WHERE id=:id
+        '''
+        item = cursor.execute(sql_query, {'id': id_}).fetchone()
+        conn.commit()
+        conn.close()
+        return item
+
+    @staticmethod
     def get_next_popped_item() -> Item:
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
