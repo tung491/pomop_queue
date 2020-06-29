@@ -133,7 +133,7 @@ def cli() -> None:
         if args.target_id < 0 or args.target_id >= queue.curr_id:
             raise ValueError('Invaild target id')
         if not args.target_id:
-            _, name, _ = queue.pop()
+            _, _, name = queue.pop()
         else:
             _, _, name = queue.pop_item(args.target_id)
         arguments.append(name)

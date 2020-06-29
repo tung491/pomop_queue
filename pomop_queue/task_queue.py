@@ -43,12 +43,12 @@ class Queue:
         sql_query = """UPDATE tasks SET {}=? WHERE ID=?"""
         if name:
             field = 'name'
-            field_value = name
+            sql_query = sql_query.format(field)
+            cursor.execute(sql_query, (name, id_))
         else:
             field = 'priority'
-            field_value = priority
-        sql_query = sql_query.format(field)
-        cursor.execute(sql_query, (field_value, id_))
+            sql_query = sql_query.format(field)
+            cursor.execute(sql_query, (priority, id_))
         conn.commit()
         conn.close()
 
@@ -76,10 +76,10 @@ class Queue:
         conn.close()
         return item
 
-    def put(self, priority: int, name: str, insert: bool = True, id_: int = -1) -> None:
+    def put(self, priority: int, name: str, insert: bool = True, id_: int = -1) -> None:  # noqa
         if id_ == -1:
             id_ = self.curr_id
-        item = (id_, name, priority)
+        item = (id_, priority, name)
         self.queue.put(item)
         if insert:
             self.curr_id += 1
