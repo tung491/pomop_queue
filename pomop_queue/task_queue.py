@@ -1,12 +1,12 @@
+import operator
+import sqlite3
+from pathlib import Path
 from queue import PriorityQueue
 from typing import Tuple
-import sqlite3
-import operator
-from pathlib import Path
 
 db_path = f'{str(Path.home())}/.tasks.db'
 
-Item = Tuple[int, str, int]
+Item = Tuple[int, int, str]
 
 
 class Queue:
@@ -19,10 +19,10 @@ class Queue:
         return self.queue.qsize()
 
     @staticmethod
-    def insert_into_db(item) -> None:
+    def insert_into_db(item: Item) -> None:
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
-        cursor.execute("""INSERT INTO tasks (id, name, priority)
+        cursor.execute("""INSERT INTO tasks (id, priority, name)
                        VALUES (?, ?, ?)""", item)
         conn.commit()
         conn.close()
@@ -76,40 +76,45 @@ class Queue:
         conn.close()
         return item
 
-    def put(self, priority: int, name: str, no_insert: bool = False) -> int:
-        item = (self.curr_id, priority, name)
+    def put(self, priority: int, name: str, insert: bool = True, id_: int = -1) -> None:
+        if id_ == -1:
+            id_ = self.curr_id
+        item = (id_, name, priority)
         self.queue.put(item)
-        self.curr_id += 1
-        if not no_insert:
+        if insert:
+            self.curr_id += 1
             self.insert_into_db(item)
-        return self.curr_id - 1
 
     def pop(self) -> Item:
         item = self.queue.get()
-        id_, name, priority = item
+        id_, priority, name = item
         self.remove_from_db(id_)
         return item
 
     def pop_item(self, id_: int) -> Item:
         pop_items = []
-        while item := self.queue.get()[0] != id_:
+        while (item := self.queue.get())[0] != id_:
             pop_items.append(item)
         returned_item = item
-
         for item in pop_items:
             self.queue.put(item)
         self.remove_from_db(id_)
         return returned_item
 
-    def modify_prority(self, id_: int, new_priority: int) -> None:
-        item = self.pop_item(id_)
-        item = (*item[:2], new_priority)
-        self.update_into_db(id_, priority=new_priority)
-        self.queue.put(item)
+    @staticmethod
+    def modify_prority(id_: int, new_priority: int) -> None:
+        sql_query = '''UPDATE tasks SET priority=:new_priority
+        WHERE id=:id
+        '''
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        cursor.execute(sql_query, {'new_priority': new_priority, 'id': id_})
+        conn.commit()
+        conn.close()
 
     def modify_name(self, id_: int, new_name: str) -> None:
         item = self.pop_item(id_)
-        item = (item[0], new_name, item[2])
+        item = (*item[:2], new_name)
         self.queue.put(item)
         self.update_into_db(id_, name=new_name)
 
@@ -119,6 +124,7 @@ class Queue:
     def print(self) -> None:
         print('ID | Name | Priority')
         print('-' * 30)
-        sorted_queue = sorted(self.queue.queue, key=operator.itemgetter(2, 0))
+        print(self.queue.queue)
+        sorted_queue = sorted(self.queue.queue, key=operator.itemgetter(1, 0))
         for id_, priority, name in sorted_queue:
-            print(f'{id_} | {priority} | {name}')
+            print(f'{id_} | {name} | {priority}')

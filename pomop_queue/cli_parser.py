@@ -13,18 +13,20 @@ def initialize_queue() -> Queue:
     cursor = conn.cursor()
     cursor.execute('''CREATE TABLE IF NOT EXISTS tasks
     (id int PRIMARY KEY,
-    priority int,
-    name varchar
+    name varchar,
+    priority int
     );
     ''')
     tasks = cursor.execute('''SELECT * FROM tasks
-    ORDER BY priority asc, id asc;
+    ORDER BY priority, id;
     ''').fetchall()
-
+    max_id = 0
     for task in tasks:
-        name, priority = task[1:]
-        queue.put(name, priority, no_insert=True)
-        queue.curr_id = task[0] + 1
+        id_, name, priority = task
+        queue.put(name, priority, insert=False, id_=id_)
+        if max_id < id_:
+            max_id = id_
+    queue.curr_id = max_id + 1
     return queue
 
 
@@ -35,7 +37,7 @@ def cli() -> None:
     subparser = parser.add_subparsers(help='sub-command help', dest='branch')
 
     # Parser for queue
-    queue_parser = subparser.add_parser('queue', help='queue help')
+    queue_parser = subparser.add_parser('queue', help='queue')
     queue_subparse = queue_parser.add_subparsers(help='Queue options help',
                                                  dest='queue_cmd')
 
@@ -56,14 +58,14 @@ def cli() -> None:
                                  'Default is 3',
                             default=3, type=int)
 
-    modify_name_parser = queue_subparse.add_parser('modify_name',
+    modify_name_parser = queue_subparse.add_parser('modify-name',
                                                    help='Modify the name '
                                                         'of task')
     modify_name_parser.add_argument('id', help='The ID of the task', type=int)
     modify_name_parser.add_argument('name', help='The new name of the task',
                                     type=str)
 
-    modify_priority_parser = queue_subparse.add_parser('modify_priority',
+    modify_priority_parser = queue_subparse.add_parser('modify-priority',
                                                        help='Modify the '
                                                             'priority of '
                                                             'the task')
@@ -75,7 +77,7 @@ def cli() -> None:
                                         type=int)
 
     # Parser for pomop
-    pomop_parser = subparser.add_parser('pomop', help='pomop help')
+    pomop_parser = subparser.add_parser('pomop', help='pomop')
     pomop_subparser = pomop_parser.add_subparsers(dest='pomop_cmd')
     pomop_subparser.add_parser('next-task')
     pomop_parser.add_argument('-l', '--length',
@@ -101,16 +103,20 @@ def cli() -> None:
             queue_parser.print_help()
         elif args.queue_cmd == 'list':
             queue.print()
-        elif args.queue_cmd == 'get_size':
-            print(queue.size)
+        elif args.queue_cmd == 'size':
+            print(f'The size of task queue is {queue.size}')
         elif args.queue_cmd == 'rm':
             queue.remove(args.id)
         elif args.queue_cmd == 'add':
-            queue.put(args.priority, args.name)
-        elif args.queue_cmd == 'modify_name':
-            queue.put(args.id, args.name)
+            if args.priority not in range(1, 6):
+                raise ValueError('Invaild priority level (1-5)')
+            queue.put(args.name, args.priority, id_=queue.curr_id)
+        elif args.queue_cmd == 'modify-name':
+            queue.modify_name(args.id, args.name)
         elif args.queue_cmd == 'modify_priority':
-            queue.put(args.id, args.priority)
+            if args.priority not in range(1, 6):
+                raise ValueError('Invaild priority lavel (1-5)')
+            queue.modify_prority(args.id, args.priority)
     elif args.branch == 'pomop':
         arguments = ['pomop']
         if args.pomop_cmd == 'next-task':
@@ -129,7 +135,7 @@ def cli() -> None:
         if not args.target_id:
             _, name, _ = queue.pop()
         else:
-            _, name, _ = queue.pop_item(args.target_id)
+            _, _, name = queue.pop_item(args.target_id)
         arguments.append(name)
         Popen(arguments)
 
