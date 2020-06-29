@@ -4,4 +4,4 @@ python:
 install: "pip install flake8 mypy"
 scripts:
     - mypy -m pomop_queue
-    - flake8 .
+    - flake8 . pomop_queue
