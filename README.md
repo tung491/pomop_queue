@@ -1,6 +1,9 @@
 # Pomop_queue - Poor man Pomodoro Queue
 
+[![Build Status](https://travis-ci.org/tung491/pomop_queue.svg?branch=master)](https://travis-ci.org/tung491/pomop_queue)
+
 Simple CLI app for run a pomodoro with task queue. Inherit from [pomop](https://github.com/hvnsweeting/pomop)
+
 
 ## Install
 ---------
