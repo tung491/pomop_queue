@@ -92,12 +92,10 @@ class Queue:
         return item
 
     def pop_item(self, id_: int) -> Item:
-        pop_items = []
-        while (item := self.queue.get())[0] != id_:
-            pop_items.append(item)
-        returned_item = item
-        for item in pop_items:
-            self.queue.put(item)
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        sql_query = 'SELECT * FROM tasks WHERE id=:id'
+        returned_item = cursor.execute(sql_query, {'id': id_}).fetchone()
         self.remove_from_db(id_)
         return returned_item
 
