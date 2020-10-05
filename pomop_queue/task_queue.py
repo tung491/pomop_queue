@@ -68,10 +68,10 @@ class Queue:
     def get_next_popped_item() -> Item:
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
-        sql_query = '''SELECT * FROM tasks
+        sql_query = """SELECT * FROM tasks
         ORDER BY priority, id
         LIMIT 1
-        '''
+        """
         item = cursor.execute(sql_query).fetchone()
         conn.close()
         return item
