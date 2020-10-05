@@ -115,7 +115,7 @@ def cli() -> None:
             queue.modify_name(args.id, args.name)
         elif args.queue_cmd == 'modify_priority':
             if args.priority not in range(1, 6):
-                raise ValueError('Invaild priority lavel (1-5)')
+                raise ValueError('Invaild priority level (1-5)')
             queue.modify_prority(args.id, args.priority)
     elif args.branch == 'pomop':
         arguments = ['pomop']
@@ -131,7 +131,7 @@ def cli() -> None:
         if args.nobrowser:
             arguments.append('-B')
         if args.target_id < 0 or args.target_id >= queue.curr_id:
-            raise ValueError('Invaild target id')
+            raise ValueError('Invaild target_id')
         if not args.target_id:
             _, _, name = queue.pop()
         else:
