@@ -23,7 +23,7 @@ pomop next-task to print the next default task
 
 pomop to execute a default pomodoro in 25 minutes
 
-#### Options
+#### Option
 | -l LENGTH, --length LENGTH | Length of Pomodoro in minutes      |
 |----------------------------|------------------------------------|
 | -S, --nosound              | Turn off sound notification        |
