@@ -3,7 +3,6 @@ import sqlite3
 import sys
 from pathlib import Path
 from subprocess import Popen
-
 from task_queue import Queue
 
 
